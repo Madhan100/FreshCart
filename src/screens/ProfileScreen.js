@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,10 @@ import {
   SafeAreaView,
   Modal,
   TextInput,
+  Platform,
   Alert,
+  StatusBar,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -19,6 +22,8 @@ export default function ProfileScreen() {
   const navigation = useNavigation();
   const {
     userProfile,
+    userRole,
+    switchRole,
     updateProfile,
     logout,
     favouriteProducts,
@@ -34,6 +39,16 @@ export default function ProfileScreen() {
   const [paymentOption, setPaymentOption] = useState(
     userProfile.paymentOption || 'UPI / Cash on Delivery'
   );
+
+  useEffect(() => {
+    if (userProfile) {
+      setName(userProfile.name || '');
+      setEmail(userProfile.email || '');
+      setPhone(userProfile.phone || '');
+      setAddress(userProfile.address || '');
+      setPaymentOption(userProfile.paymentOption || 'UPI / Cash on Delivery');
+    }
+  }, [userProfile]);
 
   const handleOpenDrawer = () => {
     if (navigation.openDrawer) {
@@ -57,26 +72,30 @@ export default function ProfileScreen() {
   };
 
   const handleSignOut = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: () => {
-            logout();
-            navigation.navigate('HomeTab');
-          },
-        },
-      ]
+    logout();
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Login' }],
+    });
+  };
+
+  const isAdmin = userRole === 'admin';
+
+  const handleOpenEditModal = () => {
+    setName(userProfile.name || '');
+    setEmail(userProfile.email || '');
+    setPhone(userProfile.phone || '');
+    setAddress(userProfile.address || '');
+    setPaymentOption(
+      userProfile.paymentOption ||
+        (isAdmin ? 'Corporate Net Banking' : 'UPI / Cash on Delivery')
     );
+    setIsEditModalVisible(true);
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* 1. Header with Hamburger, Title & Share icon */}
+      {/* 1. Header with Hamburger, Title & Edit Icon */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.iconButton}
@@ -85,13 +104,13 @@ export default function ProfileScreen() {
         >
           <Ionicons name="menu-outline" size={26} color="#1E293B" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>User Profile</Text>
+        <Text style={styles.headerTitle}>{isAdmin ? 'Admin Hub' : 'User Profile'}</Text>
         <TouchableOpacity
           style={styles.iconButton}
-          onPress={() => Alert.alert('Share', 'Share FreshCart profile link')}
+          onPress={handleOpenEditModal}
           activeOpacity={0.7}
         >
-          <Ionicons name="share-outline" size={22} color="#1E293B" />
+          <Ionicons name="create-outline" size={22} color="#1E293B" />
         </TouchableOpacity>
       </View>
 
@@ -99,26 +118,31 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* 2. Green Profile Hero Card */}
-        <View style={styles.greenCard}>
+        {/* 2. Profile Hero Card */}
+        <View style={[styles.greenCard, isAdmin && { backgroundColor: '#78350F' }]}>
           {/* Top Right Gear */}
           <TouchableOpacity
             style={styles.cardGearButton}
-            onPress={() => setIsEditModalVisible(true)}
+            onPress={handleOpenEditModal}
             activeOpacity={0.7}
           >
             <Ionicons name="settings-outline" size={18} color="rgba(255, 255, 255, 0.85)" />
           </TouchableOpacity>
 
-          {/* Avatar Circle with Letter K and small badge */}
+          {/* Avatar Circle */}
           <View style={styles.avatarContainer}>
-            <View style={styles.avatarCircle}>
-              <Text style={styles.avatarLetter}>
+            <View style={[styles.avatarCircle, isAdmin && { backgroundColor: '#FEF3C7' }]}>
+              <Text style={[styles.avatarLetter, isAdmin && { color: '#B45309' }]}>
                 {userProfile.avatarLetter || userProfile.name.charAt(0).toUpperCase()}
               </Text>
             </View>
-            <View style={styles.avatarBadgeCircle}>
-              <Ionicons name="person" size={10} color="#FFFFFF" />
+            <View
+              style={[
+                styles.avatarBadgeCircle,
+                isAdmin && { backgroundColor: '#F59E0B' },
+              ]}
+            >
+              <Ionicons name={isAdmin ? 'shield' : 'person'} size={10} color="#FFFFFF" />
             </View>
           </View>
 
@@ -126,20 +150,51 @@ export default function ProfileScreen() {
           <Text style={styles.profileName}>{userProfile.name}</Text>
           <Text style={styles.profileEmail}>{userProfile.email}</Text>
 
-          {/* Verified Customer Badge */}
-          <View style={styles.verifiedBadge}>
-            <Ionicons name="ribbon-outline" size={13} color="#60A5FA" style={{ marginRight: 4 }} />
-            <Text style={styles.verifiedBadgeText}>VERIFIED CUSTOMER</Text>
+          {/* Verified Badge */}
+          <View
+            style={[
+              styles.verifiedBadge,
+              isAdmin && {
+                backgroundColor: '#FEF3C7',
+                borderColor: '#FDE68A',
+                borderWidth: 1,
+              },
+            ]}
+          >
+            <Ionicons
+              name={isAdmin ? 'shield-checkmark' : 'ribbon-outline'}
+              size={13}
+              color={isAdmin ? '#B45309' : '#60A5FA'}
+              style={{ marginRight: 4 }}
+            />
+            <Text style={[styles.verifiedBadgeText, isAdmin && { color: '#B45309' }]}>
+              {isAdmin ? 'ADMINISTRATOR' : 'VERIFIED CUSTOMER'}
+            </Text>
           </View>
 
-          {/* Edit Profile Button */}
+          {/* Prominent Edit Profile Button on Hero Card */}
           <TouchableOpacity
-            style={styles.editProfileButton}
-            onPress={() => setIsEditModalVisible(true)}
+            style={[
+              styles.editProfileButton,
+              isAdmin && { backgroundColor: '#FEF3C7' },
+            ]}
+            onPress={handleOpenEditModal}
             activeOpacity={0.85}
           >
-            <Ionicons name="pencil-outline" size={13} color="#15803D" style={{ marginRight: 4 }} />
-            <Text style={styles.editProfileButtonText}>Edit Profile</Text>
+            <Ionicons
+              name="pencil"
+              size={13}
+              color={isAdmin ? '#B45309' : '#15803D'}
+              style={{ marginRight: 6 }}
+            />
+            <Text
+              style={[
+                styles.editProfileButtonText,
+                isAdmin && { color: '#B45309' },
+              ]}
+            >
+              Edit Profile
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -186,29 +241,48 @@ export default function ProfileScreen() {
         </View>
 
         {/* 4. Account & Delivery Details */}
-        <Text style={styles.sectionTitle}>Account & Delivery Details</Text>
+        <View style={styles.sectionTitleRow}>
+          <Text style={styles.sectionTitle}>
+            {isAdmin ? 'ADMINISTRATOR DETAILS' : 'ACCOUNT & DELIVERY DETAILS'}
+          </Text>
+          <TouchableOpacity onPress={handleOpenEditModal} activeOpacity={0.7}>
+            <Text style={styles.sectionEditLink}>Edit</Text>
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.detailsCard}>
-          {/* Mobile Phone */}
+          {/* Phone */}
           <View style={styles.detailItem}>
-            <View style={styles.detailIconWrapper}>
-              <Ionicons name="call-outline" size={18} color="#64748B" />
+            <View style={[styles.detailIconWrapper, isAdmin && { backgroundColor: '#FEF3C7' }]}>
+              <Ionicons
+                name="call-outline"
+                size={18}
+                color={isAdmin ? '#B45309' : '#15803D'}
+              />
             </View>
             <View style={styles.detailTextCol}>
-              <Text style={styles.detailLabel}>MOBILE PHONE</Text>
+              <Text style={styles.detailLabel}>
+                {isAdmin ? 'DIRECT LINE' : 'MOBILE PHONE'}
+              </Text>
               <Text style={styles.detailValue}>{userProfile.phone}</Text>
             </View>
           </View>
 
           <View style={styles.detailDivider} />
 
-          {/* Default Address */}
+          {/* Address */}
           <View style={styles.detailItem}>
-            <View style={styles.detailIconWrapper}>
-              <Ionicons name="location-outline" size={18} color="#64748B" />
+            <View style={[styles.detailIconWrapper, isAdmin && { backgroundColor: '#FEF3C7' }]}>
+              <Ionicons
+                name={isAdmin ? 'business-outline' : 'location-outline'}
+                size={18}
+                color={isAdmin ? '#B45309' : '#15803D'}
+              />
             </View>
             <View style={styles.detailTextCol}>
-              <Text style={styles.detailLabel}>DEFAULT ADDRESS</Text>
+              <Text style={styles.detailLabel}>
+                {isAdmin ? 'REGIONAL HUB ADDRESS' : 'DEFAULT ADDRESS'}
+              </Text>
               <Text style={styles.detailValue}>{userProfile.address}</Text>
             </View>
           </View>
@@ -217,13 +291,20 @@ export default function ProfileScreen() {
 
           {/* Payment Options */}
           <View style={styles.detailItem}>
-            <View style={styles.detailIconWrapper}>
-              <Ionicons name="card-outline" size={18} color="#64748B" />
+            <View style={[styles.detailIconWrapper, isAdmin && { backgroundColor: '#FEF3C7' }]}>
+              <Ionicons
+                name="card-outline"
+                size={18}
+                color={isAdmin ? '#B45309' : '#15803D'}
+              />
             </View>
             <View style={styles.detailTextCol}>
-              <Text style={styles.detailLabel}>PAYMENT OPTIONS</Text>
+              <Text style={styles.detailLabel}>
+                {isAdmin ? 'ACCOUNT TYPE' : 'PAYMENT OPTIONS'}
+              </Text>
               <Text style={styles.detailValue}>
-                {userProfile.paymentOption || 'UPI / Cash on Delivery'}
+                {userProfile.paymentOption ||
+                  (isAdmin ? 'Corporate Net Banking' : 'UPI / Cash on Delivery')}
               </Text>
             </View>
           </View>
@@ -233,14 +314,16 @@ export default function ProfileScreen() {
         <View style={styles.menuContainer}>
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => setIsEditModalVisible(true)}
+            onPress={handleOpenEditModal}
             activeOpacity={0.7}
           >
             <View style={styles.menuItemLeft}>
               <View style={[styles.menuIconBox, { backgroundColor: '#F0FDF4' }]}>
                 <Ionicons name="create-outline" size={18} color="#16A34A" />
               </View>
-              <Text style={styles.menuItemTitle}>Edit Profile & Address</Text>
+              <Text style={styles.menuItemTitle}>
+                {isAdmin ? 'Edit Admin Profile & Hub' : 'Edit Profile & Address'}
+              </Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
           </TouchableOpacity>
@@ -265,40 +348,52 @@ export default function ProfileScreen() {
             </View>
             <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
           </TouchableOpacity>
+        </View>
 
-          <View style={styles.menuDivider} />
-
+        {/* 6. Prominent Sign Out Button */}
+        <View style={{ marginTop: 18, marginBottom: 30 }}>
           <TouchableOpacity
-            style={styles.menuItem}
+            style={styles.prominentSignOutButton}
             onPress={handleSignOut}
-            activeOpacity={0.7}
+            activeOpacity={0.85}
           >
-            <View style={styles.menuItemLeft}>
-              <View style={[styles.menuIconBox, { backgroundColor: '#FEF2F2' }]}>
-                <Ionicons name="log-out-outline" size={18} color="#EF4444" />
-              </View>
-              <Text style={[styles.menuItemTitle, { color: '#EF4444' }]}>
-                Sign Out
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color="#EF4444" />
+            <Ionicons
+              name="log-out-outline"
+              size={20}
+              color="#FFFFFF"
+              style={{ marginRight: 8 }}
+            />
+            <Text style={styles.prominentSignOutButtonText}>Sign Out FreshCart</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
 
-      {/* 6. Edit Profile Modal */}
+      {/* 7. Edit Profile Modal (Working for both Admin and Customer) */}
       <Modal
         visible={isEditModalVisible}
         animationType="slide"
         transparent={true}
         onRequestClose={() => setIsEditModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.modalOverlay}
+        >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Edit Profile & Address</Text>
-              <TouchableOpacity onPress={() => setIsEditModalVisible(false)}>
-                <Ionicons name="close" size={22} color="#64748B" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.modalTitle}>
+                  {isAdmin ? 'Edit Administrator Profile' : 'Edit Profile & Address'}
+                </Text>
+                <Text style={styles.modalSubtitle}>
+                  Update your contact, address and account details
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setIsEditModalVisible(false)}
+                style={styles.modalCloseBtn}
+              >
+                <Ionicons name="close" size={20} color="#64748B" />
               </TouchableOpacity>
             </View>
 
@@ -318,9 +413,12 @@ export default function ProfileScreen() {
                 onChangeText={setEmail}
                 placeholder="Email Address"
                 keyboardType="email-address"
+                autoCapitalize="none"
               />
 
-              <Text style={styles.inputLabel}>Mobile Phone</Text>
+              <Text style={styles.inputLabel}>
+                {isAdmin ? 'Direct Line / Mobile' : 'Mobile Phone'}
+              </Text>
               <TextInput
                 style={styles.inputField}
                 value={phone}
@@ -329,16 +427,20 @@ export default function ProfileScreen() {
                 keyboardType="phone-pad"
               />
 
-              <Text style={styles.inputLabel}>Delivery Address</Text>
+              <Text style={styles.inputLabel}>
+                {isAdmin ? 'Regional Hub / Office Address' : 'Delivery Address'}
+              </Text>
               <TextInput
                 style={[styles.inputField, { height: 72 }]}
                 value={address}
                 onChangeText={setAddress}
-                placeholder="Delivery Address"
+                placeholder="Address"
                 multiline
               />
 
-              <Text style={styles.inputLabel}>Payment Option</Text>
+              <Text style={styles.inputLabel}>
+                {isAdmin ? 'Account / Banking Option' : 'Payment Option'}
+              </Text>
               <TextInput
                 style={styles.inputField}
                 value={paymentOption}
@@ -346,16 +448,32 @@ export default function ProfileScreen() {
                 placeholder="Payment Option"
               />
 
-              <TouchableOpacity
-                style={styles.saveModalButton}
-                onPress={handleSaveProfile}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.saveModalButtonText}>Save Changes</Text>
-              </TouchableOpacity>
+              <View style={styles.modalButtonRow}>
+                <TouchableOpacity
+                  style={styles.cancelModalButton}
+                  onPress={() => setIsEditModalVisible(false)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.cancelModalButtonText}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.saveModalButton}
+                  onPress={handleSaveProfile}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={16}
+                    color="#FFFFFF"
+                    style={{ marginRight: 6 }}
+                  />
+                  <Text style={styles.saveModalButtonText}>Save Changes</Text>
+                </TouchableOpacity>
+              </View>
             </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );
@@ -365,6 +483,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#F8FAF6',
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 0,
   },
   header: {
     flexDirection: 'row',
@@ -526,12 +645,22 @@ const styles = StyleSheet.create({
     color: '#64748B',
     marginTop: 2,
   },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 10,
+  },
   sectionTitle: {
     fontSize: 14,
     fontWeight: '700',
     color: '#1E293B',
-    marginTop: 20,
-    marginBottom: 10,
+  },
+  sectionEditLink: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#15803D',
   },
   detailsCard: {
     backgroundColor: '#FFFFFF',
@@ -629,6 +758,19 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#1E293B',
   },
+  modalSubtitle: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  modalCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F1F5F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   inputLabel: {
     fontSize: 11,
     fontWeight: '700',
@@ -646,17 +788,55 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#1E293B',
   },
-  saveModalButton: {
-    backgroundColor: '#2EB053',
+  modalButtonRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  cancelModalButton: {
+    flex: 1,
+    backgroundColor: '#F1F5F9',
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 20,
+    justifyContent: 'center',
+  },
+  cancelModalButtonText: {
+    color: '#475569',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  saveModalButton: {
+    flex: 2,
+    backgroundColor: '#15803D',
+    paddingVertical: 12,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   saveModalButtonText: {
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '700',
+  },
+  prominentSignOutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#DC2626',
+    paddingVertical: 14,
+    borderRadius: 14,
+    shadowColor: '#DC2626',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  prominentSignOutButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '800',
   },
 });

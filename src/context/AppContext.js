@@ -5,33 +5,35 @@ const AppContext = createContext();
 
 export const DEMO_USERS = {
   customer: {
-    email: 'customer@freshcart.com',
-    password: 'password123',
+    email: 'gokul@gmail.com',
+    password: '123456',
     role: 'customer',
-    name: 'Keerthivasan',
-    phone: '9876543210',
-    address: 'RVS Campus, Sulur, Coimbatore',
+    name: 'Gokul (Customer)',
+    phone: '+91 98765 43210',
+    address: '42, Palm Green Avenue, Coimbatore, TN - 641028',
     paymentOption: 'UPI / Cash on Delivery',
     isVerified: true,
-    avatarLetter: 'K',
+    avatarLetter: 'G',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
   },
   admin: {
-    email: 'admin@freshcart.com',
-    password: 'password123',
+    email: 'madhan@gmail.com',
+    password: '123456',
     role: 'admin',
     name: 'Madhan (Admin)',
-    phone: '9123456789',
+    phone: '+91 91234 56789',
     address: 'FreshCart Regional Hub #104, Sulur, Coimbatore',
     paymentOption: 'Corporate Net Banking',
     isVerified: true,
     avatarLetter: 'M',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
   },
 };
 
 export const AppProvider = ({ children }) => {
   // Authentication & Role
   const [userRole, setUserRole] = useState('customer');
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userProfile, setUserProfile] = useState(DEMO_USERS.customer);
 
   // Products catalog (15 items)
@@ -56,6 +58,62 @@ export const AppProvider = ({ children }) => {
     }, 3000);
   };
 
+  const verifyAndLogin = (selectedRole, email, password) => {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanPass = (password || '').trim();
+    const cleanRole = (selectedRole || '').trim().toLowerCase();
+
+    // 1. Admin Account Check
+    if (cleanEmail === DEMO_USERS.admin.email.toLowerCase()) {
+      if (cleanPass !== DEMO_USERS.admin.password) {
+        return {
+          success: false,
+          error: 'Incorrect password for Admin account. (Demo password: 123456)',
+        };
+      }
+      if (cleanRole !== 'admin') {
+        return {
+          success: false,
+          error:
+            'Role mismatch: madhan@gmail.com is an Admin account. Please select the Admin role to sign in.',
+        };
+      }
+      setUserRole('admin');
+      setIsAuthenticated(true);
+      setUserProfile(DEMO_USERS.admin);
+      showNotification('Logged in as Admin (Madhan)');
+      return { success: true };
+    }
+
+    // 2. Customer Account Check
+    if (cleanEmail === DEMO_USERS.customer.email.toLowerCase()) {
+      if (cleanPass !== DEMO_USERS.customer.password) {
+        return {
+          success: false,
+          error: 'Incorrect password for Customer account. (Demo password: 123456)',
+        };
+      }
+      if (cleanRole !== 'customer') {
+        return {
+          success: false,
+          error:
+            'Role mismatch: gokul@gmail.com is a Customer account. Please select the Customer role to sign in.',
+        };
+      }
+      setUserRole('customer');
+      setIsAuthenticated(true);
+      setUserProfile(DEMO_USERS.customer);
+      showNotification('Logged in as Customer (Gokul)');
+      return { success: true };
+    }
+
+    return {
+      success: false,
+      error:
+        'Invalid email address. Demo accounts are: madhan@gmail.com (Admin) or gokul@gmail.com (Customer).',
+    };
+  };
+
   const login = (role, email, name) => {
     const targetUser = role === 'admin' ? DEMO_USERS.admin : DEMO_USERS.customer;
     setUserRole(role);
@@ -68,16 +126,32 @@ export const AppProvider = ({ children }) => {
     showNotification(`Logged in as ${name || targetUser.name}`);
   };
 
+  const switchRole = (newRole) => {
+    if (newRole === 'admin') {
+      setUserRole('admin');
+      setUserProfile(DEMO_USERS.admin);
+      showNotification('Switched to Admin (Madhan)');
+    } else {
+      setUserRole('customer');
+      setUserProfile(DEMO_USERS.customer);
+      showNotification('Switched to Customer (Gokul)');
+    }
+  };
+
   const logout = () => {
     setIsAuthenticated(false);
     setUserRole('customer');
-    showNotification('Logged out successfully', 'info');
+    setUserProfile(DEMO_USERS.customer);
+    showNotification('Signed out successfully', 'info');
   };
 
   const updateProfile = (updatedData) => {
     setUserProfile((prev) => ({
       ...prev,
       ...updatedData,
+      avatarLetter: updatedData.name
+        ? updatedData.name.trim().charAt(0).toUpperCase()
+        : prev.avatarLetter,
     }));
     showNotification('Profile updated successfully!');
   };
@@ -225,6 +299,8 @@ export const AppProvider = ({ children }) => {
         userProfile,
         login,
         logout,
+        verifyAndLogin,
+        switchRole,
         DEMO_USERS,
         updateProfile,
 

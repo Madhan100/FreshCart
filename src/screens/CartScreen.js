@@ -8,6 +8,8 @@ import {
   SafeAreaView,
   Modal,
   Alert,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -165,7 +167,7 @@ export default function CartScreen() {
             </Text>
             <TouchableOpacity
               style={styles.startShoppingBtn}
-              onPress={() => navigation.navigate('Products')}
+              onPress={() => navigation.navigate('Shop')}
               activeOpacity={0.8}
             >
               <Ionicons name="bag-check-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
@@ -288,7 +290,7 @@ export default function CartScreen() {
               style={styles.modalDoneBtn}
               onPress={() => {
                 setOrderModalVisible(false);
-                navigation.navigate('Products');
+                navigation.navigate('Shop');
               }}
             >
               <Text style={styles.modalDoneBtnText}>Continue Shopping</Text>
@@ -304,6 +306,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#F8FAF6',
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 0,
   },
   header: {
     flexDirection: 'row',

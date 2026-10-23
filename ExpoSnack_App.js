@@ -767,6 +767,26 @@ function ProfileScreen({ navigation }) {
                 <Text style={snackStyles.primaryBtnText}>Save Profile Changes</Text>
               </TouchableOpacity>
             )}
+
+            <TouchableOpacity
+              style={[
+                snackStyles.primaryBtn,
+                {
+                  backgroundColor: '#FEF2F2',
+                  borderWidth: 1.5,
+                  borderColor: '#FCA5A5',
+                  marginTop: 14,
+                },
+              ]}
+              onPress={() => {
+                logout();
+                navigation.navigate('MainTabs', { screen: 'HomeTab' });
+              }}
+            >
+              <Text style={{ color: '#DC2626', fontWeight: '800', fontSize: 14 }}>
+                Sign Out FreshMart
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -1080,7 +1100,13 @@ function CustomDrawer(props) {
       <TouchableOpacity style={snackStyles.drawerItem} onPress={() => props.navigation.navigate('MainTabs', { screen: 'Cart' })}>
         <Text style={snackStyles.drawerLabel}>🛒 My Cart</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={snackStyles.drawerItem} onPress={logout}>
+      <TouchableOpacity
+        style={snackStyles.drawerItem}
+        onPress={() => {
+          logout();
+          props.navigation.navigate('MainTabs', { screen: 'HomeTab' });
+        }}
+      >
         <Text style={[snackStyles.drawerLabel, { color: '#EF4444' }]}>🚪 Logout</Text>
       </TouchableOpacity>
     </DrawerContentScrollView>

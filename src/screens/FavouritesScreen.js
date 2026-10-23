@@ -7,6 +7,8 @@ import {
   ScrollView,
   SafeAreaView,
   Image,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -16,6 +18,8 @@ import { colors } from '../theme/colors';
 export default function FavouritesScreen() {
   const navigation = useNavigation();
   const {
+    userRole,
+    switchRole,
     favouriteProducts,
     toggleFavourite,
     addToCart,
@@ -159,6 +163,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#F8FAF6',
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 0,
   },
   header: {
     flexDirection: 'row',

@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
+  Platform,
   Alert,
 } from 'react-native';
 import {
@@ -24,46 +25,68 @@ const Drawer = createDrawerNavigator();
 
 function CustomDrawerContent(props) {
   const { navigation } = props;
-  const { userProfile, userRole, logout, cartCount, favouriteProducts } = useApp();
+  const {
+    userProfile,
+    userRole,
+    logout,
+    cartCount,
+    favouriteProducts,
+  } = useApp();
 
   const handleLogout = () => {
-    Alert.alert(
-      'Sign Out FreshCart',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: () => {
-            logout();
-            navigation.closeDrawer();
-            navigation.navigate('MainTabs', { screen: 'HomeTab' });
-          },
-        },
-      ]
-    );
+    navigation.closeDrawer();
+    logout();
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Login' }],
+    });
   };
 
   return (
     <SafeAreaView style={styles.drawerSafe}>
       <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerScroll}>
         {/* Brand & User Profile Header */}
-        <View style={styles.drawerHeader}>
+        <View
+          style={[
+            styles.drawerHeader,
+            userRole === 'admin' && { backgroundColor: '#78350F' },
+          ]}
+        >
           <View style={styles.brandRow}>
-            <View style={styles.logoBadge}>
-              <Ionicons name="leaf" size={18} color="#FFFFFF" />
+            <View
+              style={[
+                styles.logoBadge,
+                userRole === 'admin' && { backgroundColor: '#F59E0B' },
+              ]}
+            >
+              <Ionicons
+                name={userRole === 'admin' ? 'shield' : 'leaf'}
+                size={18}
+                color="#FFFFFF"
+              />
             </View>
             <View>
               <Text style={styles.brandName}>FreshCart</Text>
-              <Text style={styles.brandTag}>Good Food, Happier You</Text>
+              <Text style={styles.brandTag}>
+                {userRole === 'admin' ? 'Admin Control Hub' : 'Good Food, Happier You'}
+              </Text>
             </View>
           </View>
 
           {/* User Info Card */}
           <View style={styles.userCard}>
-            <View style={styles.avatarCircle}>
-              <Text style={styles.avatarLetter}>
+            <View
+              style={[
+                styles.avatarCircle,
+                userRole === 'admin' && { backgroundColor: '#FEF3C7' },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.avatarLetter,
+                  userRole === 'admin' && { color: '#B45309' },
+                ]}
+              >
                 {userProfile.avatarLetter || userProfile.name.charAt(0).toUpperCase()}
               </Text>
             </View>
@@ -74,17 +97,33 @@ function CustomDrawerContent(props) {
               <Text style={styles.userEmail} numberOfLines={1}>
                 {userProfile.email}
               </Text>
-              <View style={styles.roleBadge}>
+              <View
+                style={[
+                  styles.roleBadge,
+                  userRole === 'admin' && {
+                    backgroundColor: '#FEF3C7',
+                    borderColor: '#FDE68A',
+                  },
+                ]}
+              >
                 <Ionicons
-                  name="shield-checkmark"
+                  name={userRole === 'admin' ? 'shield-checkmark' : 'person'}
                   size={10}
-                  color="#15803D"
+                  color={userRole === 'admin' ? '#B45309' : '#15803D'}
                   style={{ marginRight: 4 }}
                 />
-                <Text style={styles.roleBadgeText}>VERIFIED CUSTOMER</Text>
+                <Text
+                  style={[
+                    styles.roleBadgeText,
+                    userRole === 'admin' && { color: '#B45309' },
+                  ]}
+                >
+                  {userRole === 'admin' ? 'ADMINISTRATOR' : 'VERIFIED CUSTOMER'}
+                </Text>
               </View>
             </View>
           </View>
+
         </View>
 
         {/* Navigation Menu Items */}
@@ -304,6 +343,23 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '800',
     color: '#15803D',
+  },
+  drawerSwitchBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  drawerSwitchText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   menuSection: {
     paddingHorizontal: 16,

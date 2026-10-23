@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   Image,
   Platform,
+  StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -68,6 +69,7 @@ export default function HomeScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        style={styles.mainScroll}
       >
         {/* 2. App Header with Hamburger, Logo & Cart */}
         <View style={styles.headerContainer}>
@@ -221,20 +223,24 @@ export default function HomeScreen() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
+          style={styles.categoryCirclesScrollView}
           contentContainerStyle={styles.categoryCirclesScroll}
         >
-          {CATEGORY_CIRCLES.map((cat) => (
+          {[
+            { id: 'all', name: 'All Items', emoji: '🛒', bg: '#DCFCE7', color: '#15803D', filter: 'All Categories' },
+            { id: 'fruits_veg', name: 'Fruits & Veg', emoji: '🍎', bg: '#FEE2E2', color: '#DC2626', filter: 'Fruits & Veg' },
+            { id: 'dairy_eggs', name: 'Dairy & Eggs', emoji: '🥛', bg: '#DBEAFE', color: '#2563EB', filter: 'Dairy' },
+            { id: 'bakery', name: 'Bakery', emoji: '🍞', bg: '#FEF3C7', color: '#D97706', filter: 'Bakery' },
+            { id: 'meat_seafood', name: 'Meat & Seafood', emoji: '🍗', bg: '#FCE7F3', color: '#DB2777', filter: 'Meat' },
+          ].map((cat) => (
             <TouchableOpacity
               key={cat.id}
               style={styles.categoryCircleItem}
-              onPress={() => handleCategoryPress(cat.name)}
+              onPress={() => handleCategoryPress(cat.filter)}
               activeOpacity={0.8}
             >
-              <View style={styles.categoryImageWrapper}>
-                <Image
-                  source={{ uri: cat.image }}
-                  style={styles.categoryImage}
-                />
+              <View style={[styles.categoryImageWrapper, { backgroundColor: cat.bg }]}>
+                <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
               </View>
               <Text style={styles.categoryCircleLabel} numberOfLines={2}>
                 {cat.name}
@@ -257,12 +263,14 @@ export default function HomeScreen() {
               <Text style={styles.promoBadgeOff}>OFF</Text>
             </View>
 
-            <Text style={styles.promoTag}>Season's Best</Text>
-            <Text style={styles.promoTitleWhite}>Fresh & Healthy</Text>
-            <Text style={styles.promoSubtitleWhite}>Farm to your home</Text>
+            <View>
+              <Text style={styles.promoTag}>Season's Best</Text>
+              <Text style={styles.promoTitleWhite}>Fresh & Healthy</Text>
+              <Text style={styles.promoSubtitleWhite}>Farm to your home</Text>
+            </View>
 
             <View style={styles.promoActionRow}>
-              <Text style={styles.promoLinkWhite}>Shop Seasonal →</Text>
+              <Text style={styles.promoLinkWhite}>Shop Now →</Text>
             </View>
           </TouchableOpacity>
 
@@ -277,10 +285,16 @@ export default function HomeScreen() {
                 uri: 'https://images.unsplash.com/photo-1610348725531-843dff563e2c?auto=format&fit=crop&w=400&q=80',
               }}
               style={styles.promoCard2BgImage}
+              resizeMode="cover"
             />
             <View style={styles.promoCard2Overlay} />
-            <Text style={styles.promoTagDark}>Healthy Choices</Text>
-            <Text style={styles.promoTitleDark}>Happier Families</Text>
+            <View style={{ zIndex: 2 }}>
+              <Text style={styles.promoTagDark}>Healthy Choices</Text>
+              <Text style={styles.promoTitleDark}>Daily Fresh Essentials</Text>
+            </View>
+            <View style={styles.promoActionRow}>
+              <Text style={[styles.promoLinkWhite, { color: '#B45309', zIndex: 2 }]}>Explore →</Text>
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -381,6 +395,11 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    backgroundColor: '#15803D',
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 28) : 0,
+  },
+  mainScroll: {
+    flex: 1,
     backgroundColor: '#F8FAF6',
   },
   topAnnouncementBar: {
@@ -389,7 +408,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 7,
+    paddingVertical: 9,
   },
   announcementLeft: {
     flexDirection: 'row',
@@ -621,22 +640,26 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#2EB053',
   },
+  categoryCirclesScrollView: {
+    height: 105,
+    minHeight: 105,
+  },
   categoryCirclesScroll: {
     paddingHorizontal: 16,
-    gap: 14,
+    alignItems: 'center',
   },
   categoryCircleItem: {
     alignItems: 'center',
-    width: 68,
-    marginRight: 10,
+    width: 72,
+    marginRight: 12,
   },
   categoryImageWrapper: {
     width: 58,
     height: 58,
     borderRadius: 29,
-    overflow: 'hidden',
-    backgroundColor: '#E2E8F0',
-    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
     borderColor: '#FFFFFF',
     marginBottom: 6,
     shadowColor: '#000',
@@ -645,13 +668,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  categoryImage: {
-    width: '100%',
-    height: '100%',
+  categoryEmoji: {
+    fontSize: 26,
   },
   categoryCircleLabel: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#334155',
     textAlign: 'center',
     lineHeight: 14,
@@ -659,14 +681,17 @@ const styles = StyleSheet.create({
   promoCardsRow: {
     flexDirection: 'row',
     paddingHorizontal: 16,
-    marginTop: 18,
+    marginTop: 14,
+    height: 135,
     gap: 12,
   },
   promoCard: {
     flex: 1,
     borderRadius: 16,
-    padding: 14,
-    minHeight: 128,
+    padding: 12,
+    height: 135,
+    minHeight: 135,
+    maxHeight: 135,
     justifyContent: 'space-between',
     overflow: 'hidden',
   },
@@ -737,6 +762,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     width: '100%',
     height: '100%',
+    resizeMode: 'cover',
   },
   promoCard2Overlay: {
     ...StyleSheet.absoluteFillObject,
